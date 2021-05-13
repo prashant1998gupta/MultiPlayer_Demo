@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace mmocircles
+namespace prashantMultiPlayer
 {
 
     public class AvataarChange : MonoBehaviour

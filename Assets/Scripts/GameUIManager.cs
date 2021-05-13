@@ -6,86 +6,147 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class GameUIManager : MonoBehaviour
+
+namespace prashantMultiPlayer
 {
-    public static GameUIManager instance;
-
-    [Header("GameUIManger")]
-    public Text randomNUmber;
-    public Text randomNumberSum;
-    public Button randomNumberButtonGenerator;
-
-    public int sum;
-    int random;
-
-
-    [Header("winerPanel")]
-    public GameObject winnerPanel;
-    public Button okButton;
-
-    private void Awake()
+    public class GameUIManager : MonoBehaviour
     {
-        instance = this;
-    }
-    private void Start()
-    {
-        PhotonNetwork.AutomaticallySyncScene = false;
-        UIManager.uiManagerInstance.opponentScearchPanel.SetActive(false);
-        Debug.Log($"timer started");
-        Timer.instace
-        .SetDuration(20).OnEnd(() => winnerPanel.SetActive(true))
-        .Begin();
+        public static GameUIManager instance;
 
-        randomNumberSum.text = "0";
-        randomNUmber.text = "0";
-        sum = 0;
-        AddListnerInButton();
-    }
+        public delegate void OnScoreIncrese(bool Success);
+        public static OnScoreIncrese ScoreIncrement;
 
-    private void AddListnerInButton()
-    {
-        randomNumberButtonGenerator.onClick.AddListener(() =>OnRandomButtonClick());
-        okButton.onClick.AddListener(OnClickOkButton);
-    }
+        [Header("GameUIManger")]
+        public Text randomNUmber;
+        public Text randomNumberSum;
+        public Button randomNumberButtonGenerator;
 
-    private void OnClickOkButton()
-    {
-        //StartCoroutine(MainSceneLoad());
-        MainSceneLoad();
-    }
+        public int sum;
+        int random;
 
 
-    //IEnumerator MainSceneLoad()
-    void MainSceneLoad()
-    {
+        [Header("winerPanel")]
+        public GameObject winnerPanel;
+        public Button okButton;
 
-        SceneManager.LoadScene(0);
-        /*AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(0);
 
-        // Wait until the asynchronous scene fully loads
-        while (!asyncLoad.isDone)
+        [Header("topPanel")]
+        public Text myName;
+        public Text myScore;
+        public Sprite mySprite;
+
+        [Space]
+
+        public Text oppName;
+        public Text oppScore;
+        public Sprite oppSprite;
+
+        [Header("WaitingForOtherPanel")]
+
+        public GameObject WaitingForOther;
+
+        [Header("leave game ui")]
+        public Button pause;
+        public GameObject PausePNL;
+        public Button HomeBTNPauseMenu;
+        public Button CancelMultiPause;
+        public GameObject OtherPlayerLeft;
+
+        private void Awake()
         {
-            yield return null;
-            Debug.Log("Scene Done");
-        }*/
-    }
+            Debug.Log("GameUiManager Awake calling");
+            if (instance == null)
+            {
 
-    private void OnRandomButtonClick()
-    {
-        random = UnityEngine.Random.Range(0, 11);
+                instance = this;
+            }
+            else
+            {
+                Destroy(this.gameObject);
+            }
 
-        RandomText();
-        RandomSum();
-    }
+        }
+        private void OnEnable()
+        {
+            StaticData.MyStaticTiming = 30;
+            PhotonNetwork.AutomaticallySyncScene = false;
+            //UIManager.uiManagerInstance.opponentScearchPanel.SetActive(false);
+            Debug.Log($"timer started");
+            CounterTimer.instace
+            .SetDuration(StaticData.MyStaticTiming)
+            .Begin();
 
-    private void RandomSum()
-    {
-        sum += random;
-        randomNumberSum.text = sum.ToString();
-    }
+            randomNumberSum.text = "0";
+            randomNUmber.text = "0";
+            sum = 0;
+            AddListnerInButton();
+        }
 
-    public void RandomText()
-    {
-        randomNUmber.text = random.ToString();
+        private void AddListnerInButton()
+        {
+            randomNumberButtonGenerator.onClick.AddListener(() => OnRandomButtonClick());
+            okButton.onClick.AddListener(OnClickOkButton);
+
+            // pause game buttons
+            pause.onClick.AddListener(Pause);
+            HomeBTNPauseMenu.onClick.AddListener(LeaveRoomFun);
+            CancelMultiPause.onClick.AddListener(OnCancleMultipayer);
+        }
+
+
+
+        private void OnClickOkButton()
+        {
+            MainSceneLoad();
+        }
+
+        void MainSceneLoad()
+        {
+
+            SceneManager.LoadScene(0);
+
+        }
+
+        private void OnRandomButtonClick()
+        {
+            random = UnityEngine.Random.Range(0, 11);
+
+            RandomText();
+            RandomSum();
+
+            ScoreIncrement?.Invoke(true);
+        }
+
+        private void RandomSum()
+        {
+            sum += random;
+            randomNumberSum.text = sum.ToString();
+            myScore.text = sum.ToString();
+        }
+
+        public void RandomText()
+        {
+            randomNUmber.text = random.ToString();
+        }
+
+        void LeaveRoomFun()
+        {
+            PhotonManager.instance.LeaveGameCond();
+        }
+
+
+        private void OnCancleMultipayer()
+        {
+            PausePNL.SetActive(false);
+        }
+        public void Pause()
+        {
+            if (PhotonManager.instance.IsMultiPlayer)
+            {
+                PausePNL.SetActive(true);
+            }
+
+        }
+
     }
 }
